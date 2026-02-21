@@ -53,11 +53,16 @@ export class ModelManagementClient {
   }
 
   async authenticate(username: string, password: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/auth/login`, {
-      body: JSON.stringify({password, username}),
-      headers: {'Content-Type': 'application/json'},
-      method: 'POST',
-    })
+    let response
+    try {
+      response = await fetch(`${this.baseUrl}/auth/login`, {
+        body: JSON.stringify({password, username}),
+        headers: {'Content-Type': 'application/json'},
+        method: 'POST',
+      })
+    } catch {
+      ux.error('Network error: could not reach the server')
+    }
 
     const data: AuthResponse = await response.json()
     if (!response.ok) {
@@ -67,6 +72,7 @@ export class ModelManagementClient {
     this.token = data.access_token
     this.refreshToken = data.refresh_token
     this.saveConfig()
+    console.log('Login successful.')
   }
 
   deleteSshKey(keyId: string): Promise<unknown> {
@@ -112,6 +118,16 @@ export class ModelManagementClient {
       body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'},
     })
+  }
+
+  logout(): void {
+    if (fs.existsSync(ModelManagementClient.CONFIG_FILE)) {
+      fs.rmSync(ModelManagementClient.CONFIG_FILE)
+    }
+
+    this.token = null
+    this.refreshToken = null
+    console.log('Successfully logged out!')
   }
 
   registerModel(

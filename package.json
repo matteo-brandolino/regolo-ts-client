@@ -8,6 +8,8 @@
   },
   "bugs": "https://github.com/matteo-brandolino/ts-client/issues",
   "dependencies": {
+    "@inquirer/password": "^5.0.7",
+    "@inquirer/prompts": "^8.2.1",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5"
