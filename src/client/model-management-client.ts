@@ -13,9 +13,17 @@ interface AuthResponse {
 }
 
 interface ModelInfo {
+  created_at?: string
+  email?: string
   id: string
   name: string
   provider: string
+  url?: string
+}
+
+interface ModelsListResponse {
+  models: ModelInfo[]
+  total: number
 }
 
 type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT'
@@ -75,6 +83,10 @@ export class ModelManagementClient {
     console.log('Login successful.')
   }
 
+  deleteModel(modelName: string): Promise<unknown> {
+    return this.makeRequest('DELETE', `/models/${modelName}`)
+  }
+
   deleteSshKey(keyId: string): Promise<unknown> {
     return this.makeRequest('DELETE', `/ssh-keys/${keyId}`)
   }
@@ -89,6 +101,10 @@ export class ModelManagementClient {
 
   getModel(modelName: string): Promise<ModelInfo> {
     return this.makeRequest('GET', `/models/${modelName}`) as Promise<ModelInfo>
+  }
+
+  getModels(): Promise<ModelsListResponse> {
+    return this.makeRequest('GET', '/models') as Promise<ModelsListResponse>
   }
 
   getSshKeys(): Promise<unknown> {
@@ -202,10 +218,13 @@ export class ModelManagementClient {
 
     const doFetch = () =>
       fetch(url, {
-        headers: this.headers(),
+        ...options,
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...this.headers(),
+        },
         method,
         signal: AbortSignal.timeout(this.timeoutSeconds * 1000),
-        ...options,
       })
 
     let response = await doFetch()

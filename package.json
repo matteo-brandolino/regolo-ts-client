@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "author": "matteo-brandolino",
   "bin": {
-    "ts-client": "./bin/run.js"
+    "regolo": "./bin/run.js"
   },
   "bugs": "https://github.com/matteo-brandolino/ts-client/issues",
   "dependencies": {
@@ -47,8 +47,8 @@
   "main": "dist/index.js",
   "type": "module",
   "oclif": {
-    "bin": "ts-client",
-    "dirname": "ts-client",
+    "bin": "regolo",
+    "dirname": "regolo",
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
