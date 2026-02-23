@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "module": "Node16",
+    "strict": true,
+    "target": "es2022",
+    "moduleResolution": "node16"
+  },
+  "ts-node": {
+    "esm": true
+  }
+}

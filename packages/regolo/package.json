@@ -1,0 +1,20 @@
+{
+  "name": "@regolo/sdk",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b"
+  },
+  "devDependencies": {
+    "shx": "^0.3.3",
+    "typescript": "^5"
+  }
+}
