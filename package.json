@@ -5,6 +5,6 @@
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",
-    "postinstall": "pnpm --filter @regolo/cli link --global"
+    "postinstall": "pnpm -C packages/regolo-cli link --global"
   }
 }
