@@ -11,10 +11,12 @@ export default class ModelsAvailable extends BaseCommand {
   ]
   static override flags = {
     apiKey: Flags.string({
+      aliases: ['api-key'],
       description: 'The API key used to query Regolo.',
       required: true,
     }),
     modelType: Flags.string({
+      aliases: ['model-type'],
       default: '',
       description: 'The type of the models you want to retrieve (returns all by default)',
       options: ['', 'audio_transcription', 'chat', 'embedding', 'image_generation', 'rerank'],

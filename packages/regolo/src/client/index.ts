@@ -27,6 +27,26 @@ export interface GetAvailableModelsOptions {
   modelInfo?: boolean;
 }
 
+export interface RegoloClientOptions {
+  apiKey?: string | null;
+  alternativeUrl?: string | null;
+  audioTranscriptionModel?: string | null;
+  chatModel?: string | null;
+  embedderModel?: string | null;
+  imageGenerationModel?: string | null;
+  preExistentConversation?: Conversation;
+  rerankerModel?: string | null;
+}
+
+export interface RunChatOptions {
+  fullOutput?: boolean;
+  maxTokens?: number;
+  stream?: boolean;
+  temperature?: number | null;
+  topK?: number | null;
+  topP?: number | null;
+}
+
 type Role = string;
 type Content = string;
 type OutputHandler<T> = (chunk: unknown) => T;
@@ -59,16 +79,16 @@ async function safePost(
 export class RegoloClient {
   instance: RegoloInstance;
 
-  constructor(
-    chatModel?: string | null,
-    embedderModel?: string | null,
-    imageGenerationModel?: string | null,
-    audioTranscriptionModel?: string | null,
-    rerankerModel?: string | null,
-    apiKey?: string | null,
-    alternativeUrl?: string | null,
-    preExistentConversation?: Conversation,
-  ) {
+  constructor({
+    chatModel,
+    embedderModel,
+    imageGenerationModel,
+    audioTranscriptionModel,
+    rerankerModel,
+    apiKey,
+    alternativeUrl,
+    preExistentConversation,
+  }: RegoloClientOptions = {}) {
     const resolvedKey = (apiKey ?? config.defaultKey) ?? "";
     const baseUrl = alternativeUrl ?? REGOLO_URL;
 
@@ -85,16 +105,16 @@ export class RegoloClient {
   }
 
   static fromInstance(instance: RegoloInstance, alternativeUrl?: string | null): RegoloClient {
-    return new RegoloClient(
-      instance.chatModel,
-      instance.embedderModel,
-      instance.imageGenerationModel,
-      instance.audioTranscriptionModel,
-      instance.rerankerModel,
-      instance.apiKey,
-      alternativeUrl ?? instance.baseUrl,
-      instance.conversation,
-    );
+    return new RegoloClient({
+      chatModel: instance.chatModel,
+      embedderModel: instance.embedderModel,
+      imageGenerationModel: instance.imageGenerationModel,
+      audioTranscriptionModel: instance.audioTranscriptionModel,
+      rerankerModel: instance.rerankerModel,
+      apiKey: instance.apiKey,
+      alternativeUrl: alternativeUrl ?? instance.baseUrl,
+      preExistentConversation: instance.conversation,
+    });
   }
 
   static async *createStreamGenerator<T>(
@@ -332,12 +352,7 @@ export class RegoloClient {
 
   async runChat(
     userPrompt?: string | null,
-    stream: boolean = false,
-    maxTokens: number = 200,
-    temperature?: number | null,
-    topP?: number | null,
-    topK?: number | null,
-    fullOutput: boolean = false,
+    { stream = false, maxTokens = 200, temperature, topP, topK, fullOutput = false }: RunChatOptions = {},
   ): Promise<[Role, Content] | object | AsyncGenerator<unknown>> {
     if (userPrompt != null) {
       this.instance.addPromptAsRole(userPrompt, "user");

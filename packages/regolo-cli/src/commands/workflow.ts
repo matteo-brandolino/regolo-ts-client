@@ -23,11 +23,11 @@ export default class Workflow extends BaseCommand {
     '<%= config.bin %> <%= command.id %> mymodel --type custom --autoLoad',
   ]
   static override flags = {
-    apiKey: Flags.string({description: 'HuggingFace API key (optional)'}),
-    autoLoad: Flags.boolean({description: 'Automatically load model for inference after upload'}),
-    localModelPath: Flags.string({description: 'Path to local model files (for custom models)'}),
-    sshKeyFile: Flags.string({description: 'Path to SSH public key file (for custom models)'}),
-    sshKeyTitle: Flags.string({description: 'Title for SSH key (for custom models)'}),
+    apiKey: Flags.string({aliases: ['api-key'], description: 'HuggingFace API key (optional)'}),
+    autoLoad: Flags.boolean({aliases: ['auto-load'], description: 'Automatically load model for inference after upload'}),
+    localModelPath: Flags.string({aliases: ['local-model-path'], description: 'Path to local model files (for custom models)'}),
+    sshKeyFile: Flags.string({aliases: ['ssh-key-file'], description: 'Path to SSH public key file (for custom models)'}),
+    sshKeyTitle: Flags.string({aliases: ['ssh-key-title'], description: 'Title for SSH key (for custom models)'}),
     type: Flags.string({
       char: 't',
       description: 'Type of model',
