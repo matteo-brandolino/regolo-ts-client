@@ -73,6 +73,13 @@ export interface RerankOptions {
   topN?: number | null;
 }
 
+export interface EmbeddingsOptions {
+  apiKey?: string | null;
+  baseUrl?: string;
+  fullOutput?: boolean;
+  model?: string | null;
+}
+
 type Role = string;
 type Content = string;
 type OutputHandler<T> = (chunk: unknown) => T;
@@ -521,10 +528,12 @@ export class RegoloClient {
 
   static async embeddings(
     inputText: string | string[],
-    model?: string | null,
-    apiKey?: string | null,
-    baseUrl: string = REGOLO_URL,
-    fullOutput: boolean = false,
+    {
+      model,
+      apiKey,
+      baseUrl = REGOLO_URL,
+      fullOutput = false,
+    }: EmbeddingsOptions = {},
   ): Promise<object> {
     const resolvedKey = (apiKey ?? config.defaultKey) ?? "";
     const checkedKey = KeysHandler.checkKey(resolvedKey);
@@ -546,15 +555,14 @@ export class RegoloClient {
 
   async embeddings(
     inputText: string | string[],
-    fullOutput: boolean = false,
+    options: Omit<EmbeddingsOptions, "apiKey" | "baseUrl"> = {},
   ): Promise<object> {
-    return RegoloClient.embeddings(
-      inputText,
-      this.instance.embedderModel,
-      this.instance.apiKey,
-      this.instance.baseUrl,
-      fullOutput,
-    );
+    return RegoloClient.embeddings(inputText, {
+      ...options,
+      model: options.model ?? this.instance.embedderModel,
+      apiKey: this.instance.apiKey,
+      baseUrl: this.instance.baseUrl,
+    });
   }
 
   // ── Audio transcription ──────────────────────────────────────────────────────
