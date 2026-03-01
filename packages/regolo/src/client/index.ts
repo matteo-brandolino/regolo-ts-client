@@ -62,6 +62,17 @@ export interface AudioTranscriptionOptions {
   timestampGranularities?: string[] | null;
 }
 
+export interface RerankOptions {
+  apiKey?: string | null;
+  baseUrl?: string;
+  fullOutput?: boolean;
+  maxChunksPerDoc?: number | null;
+  model?: string | null;
+  rankFields?: string[] | null;
+  returnDocuments?: boolean;
+  topN?: number | null;
+}
+
 type Role = string;
 type Content = string;
 type OutputHandler<T> = (chunk: unknown) => T;
@@ -672,14 +683,16 @@ export class RegoloClient {
   static async rerank(
     query: string,
     documents: RerankDocument[],
-    model?: string | null,
-    apiKey?: string | null,
-    topN?: number | null,
-    rankFields?: string[] | null,
-    returnDocuments: boolean = true,
-    maxChunksPerDoc?: number | null,
-    baseUrl: string = REGOLO_URL,
-    fullOutput: boolean = false,
+    {
+      model,
+      apiKey,
+      topN,
+      rankFields,
+      returnDocuments = true,
+      maxChunksPerDoc,
+      baseUrl = REGOLO_URL,
+      fullOutput = false,
+    }: RerankOptions = {},
   ): Promise<object[] | object> {
     const resolvedKey = (apiKey ?? config.defaultKey) ?? "";
     const checkedKey = KeysHandler.checkKey(resolvedKey);
@@ -707,24 +720,14 @@ export class RegoloClient {
   async rerank(
     query: string,
     documents: RerankDocument[],
-    topN?: number | null,
-    rankFields?: string[] | null,
-    returnDocuments: boolean = true,
-    maxChunksPerDoc?: number | null,
-    fullOutput: boolean = false,
+    options: Omit<RerankOptions, "apiKey" | "baseUrl"> = {},
   ): Promise<object[] | object> {
-    return RegoloClient.rerank(
-      query,
-      documents,
-      this.instance.rerankerModel,
-      this.instance.apiKey,
-      topN,
-      rankFields,
-      returnDocuments,
-      maxChunksPerDoc,
-      this.instance.baseUrl,
-      fullOutput,
-    );
+    return RegoloClient.rerank(query, documents, {
+      ...options,
+      model: options.model ?? this.instance.rerankerModel,
+      apiKey: this.instance.apiKey,
+      baseUrl: this.instance.baseUrl,
+    });
   }
 
   // ── Available models ─────────────────────────────────────────────────────────
