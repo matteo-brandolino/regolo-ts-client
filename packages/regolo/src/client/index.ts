@@ -47,6 +47,21 @@ export interface RunChatOptions {
   topP?: number | null;
 }
 
+export interface AudioTranscriptionOptions {
+  apiKey?: string | null;
+  baseUrl?: string;
+  chunkingStrategy?: string | Record<string, unknown> | null;
+  fullOutput?: boolean;
+  include?: string[] | null;
+  language?: string | null;
+  model?: string | null;
+  prompt?: string | null;
+  responseFormat?: string;
+  stream?: boolean;
+  temperature?: number | null;
+  timestampGranularities?: string[] | null;
+}
+
 type Role = string;
 type Content = string;
 type OutputHandler<T> = (chunk: unknown) => T;
@@ -535,18 +550,20 @@ export class RegoloClient {
 
   static async audioTranscription(
     file: AudioFileInput,
-    model?: string | null,
-    apiKey?: string | null,
-    chunkingStrategy?: string | Record<string, unknown> | null,
-    include?: string[] | null,
-    language?: string | null,
-    prompt?: string | null,
-    responseFormat: string = "json",
-    stream: boolean = false,
-    temperature?: number | null,
-    timestampGranularities?: string[] | null,
-    baseUrl: string = REGOLO_URL,
-    fullOutput: boolean = false,
+    {
+      model,
+      apiKey,
+      chunkingStrategy,
+      include,
+      language,
+      prompt,
+      responseFormat = "json",
+      stream = false,
+      temperature,
+      timestampGranularities,
+      baseUrl = REGOLO_URL,
+      fullOutput = false,
+    }: AudioTranscriptionOptions = {},
   ): Promise<string | object | AsyncGenerator<unknown>> {
     const resolvedKey = (apiKey ?? config.defaultKey) ?? "";
     const checkedKey = KeysHandler.checkKey(resolvedKey);
@@ -640,32 +657,14 @@ export class RegoloClient {
 
   async audioTranscription(
     file: AudioFileInput,
-    model?: string | null,
-    chunkingStrategy?: string | Record<string, unknown> | null,
-    include?: string[] | null,
-    language?: string | null,
-    prompt?: string | null,
-    responseFormat: string = "json",
-    stream: boolean = false,
-    temperature?: number | null,
-    timestampGranularities?: string[] | null,
-    fullOutput: boolean = false,
+    options: Omit<AudioTranscriptionOptions, "apiKey" | "baseUrl"> = {},
   ): Promise<string | object | AsyncGenerator<unknown>> {
-    return RegoloClient.audioTranscription(
-      file,
-      model ?? this.instance.audioTranscriptionModel,
-      this.instance.apiKey,
-      chunkingStrategy,
-      include,
-      language,
-      prompt,
-      responseFormat,
-      stream,
-      temperature,
-      timestampGranularities,
-      this.instance.baseUrl,
-      fullOutput,
-    );
+    return RegoloClient.audioTranscription(file, {
+      ...options,
+      model: options.model ?? this.instance.audioTranscriptionModel,
+      apiKey: this.instance.apiKey,
+      baseUrl: this.instance.baseUrl,
+    });
   }
 
   // ── Rerank ───────────────────────────────────────────────────────────────────
