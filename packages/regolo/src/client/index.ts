@@ -308,18 +308,33 @@ export class RegoloClient {
 
     const headers = { Authorization: checkedKey };
 
+    const _state = { inReasoning: false };
+
     const chatOutputHandler = (chunk: unknown): [Role, Content] | null => {
+      const resolve = (delta: Record<string, string>): [Role, Content] => {
+        const content = delta.content;
+        const reasoning = delta.reasoning_content;
+        if (content) {
+          _state.inReasoning = false;
+          return ["", content];
+        } else if (reasoning) {
+          _state.inReasoning = true;
+          return ["thinking", reasoning];
+        }
+        return ["", ""];
+      };
+
       if (Array.isArray(chunk)) {
         const element = chunk[0] as Record<string, unknown>;
         const delta =
           ((element?.choices as Record<string, unknown>[])?.[0]?.delta as Record<string, string>) ??
           {};
-        return [delta.role ?? "", delta.content ?? ""];
+        return resolve(delta);
       } else if (typeof chunk === "object" && chunk !== null) {
         const c = chunk as Record<string, unknown>;
         const choices = (c.choices as Record<string, unknown>[]) ?? [{}];
         const delta = (choices[0]?.delta as Record<string, string>) ?? {};
-        return [delta.role ?? "", delta.content ?? ""];
+        return resolve(delta);
       }
       return null;
     };
@@ -352,7 +367,7 @@ export class RegoloClient {
 
   async runChat(
     userPrompt?: string | null,
-    { stream = false, maxTokens = 200, temperature, topP, topK, fullOutput = false }: RunChatOptions = {},
+    { stream = false, maxTokens = 2048, temperature, topP, topK, fullOutput = false }: RunChatOptions = {},
   ): Promise<[Role, Content] | object | AsyncGenerator<unknown>> {
     if (userPrompt != null) {
       this.instance.addPromptAsRole(userPrompt, "user");
@@ -390,7 +405,32 @@ export class RegoloClient {
       this.instance.addLine({ role: responseRole, content: responseText });
     }
 
+    if (stream) {
+      return RegoloClient.streamingWithHistoryUpdate(
+        response as AsyncGenerator<unknown>,
+        this.instance,
+      );
+    }
     return response;
+  }
+
+  private static async *streamingWithHistoryUpdate(
+    generator: AsyncGenerator<unknown>,
+    instance: RegoloInstance,
+  ): AsyncGenerator<unknown> {
+    let accumulatedContent = "";
+    for await (const chunk of generator) {
+      if (chunk != null) {
+        const [role, content] = chunk as [string, string];
+        if (role !== "thinking" && content) {
+          accumulatedContent += content;
+        }
+      }
+      yield chunk;
+    }
+    if (accumulatedContent) {
+      instance.addLine({ role: "assistant", content: accumulatedContent });
+    }
   }
 
   // ── Image generation ─────────────────────────────────────────────────────────

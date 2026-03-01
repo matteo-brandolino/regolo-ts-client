@@ -4,6 +4,10 @@ import { AvailableModelInfo, RegoloClient } from "@regolo/sdk";
 
 import { BaseCommand } from "../base-command.js";
 
+const RESET = "\x1b[0m";
+const DIM = "\x1b[2m";
+const DIM_ITALIC = "\x1b[2m\x1b[3m";
+
 export default class Chat extends BaseCommand {
   static override description = "Allows chatting with LLMs";
   static override examples = [
@@ -30,11 +34,17 @@ export default class Chat extends BaseCommand {
       description: "Do not hide the API key when typing",
       required: false,
     }),
+    maxTokens: Flags.integer({
+      aliases: ["max-tokens"],
+      default: 2048,
+      description: "Max tokens per response (default: 2048)",
+      required: false,
+    }),
   };
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(Chat);
-    const { noHide, disableNewlines } = flags;
+    const { noHide, disableNewlines, maxTokens } = flags;
     let { apiKey } = flags;
 
     if (!apiKey) {
@@ -70,13 +80,30 @@ export default class Chat extends BaseCommand {
 
       if (userInput === "/bye") break;
 
-      const response = await client.runChat(userInput, { stream: true });
+      const response = await client.runChat(userInput, { stream: true, maxTokens });
+
+      let wasThinking = false;
 
       for await (const chunk of response as AsyncGenerator<unknown>) {
+        if (chunk == null) continue;
+
         const [role, content] = chunk as [string, string];
-        if (role) process.stdout.write(role + ":\n");
+        const isThinking = role === "thinking";
         const text = disableNewlines ? content.replace(/\n/g, " ") : content;
-        process.stdout.write(text);
+
+        if (isThinking && !wasThinking) {
+          process.stdout.write(DIM_ITALIC + "Thinking..." + RESET + "\n");
+          wasThinking = true;
+        } else if (!isThinking && wasThinking && text) {
+          process.stdout.write(DIM + "\n─────────────────────\n" + RESET + "\n");
+          wasThinking = false;
+        }
+
+        if (isThinking) {
+          process.stdout.write(DIM + text + RESET);
+        } else {
+          process.stdout.write(text);
+        }
       }
 
       process.stdout.write("\n\n");
