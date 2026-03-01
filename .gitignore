@@ -6,7 +6,8 @@
 /tmp
 **/node_modules
 oclif.manifest.json
-
+**/.vscode
+output_images
 
 yarn.lock
 package-lock.json
